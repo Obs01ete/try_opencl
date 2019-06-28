@@ -1,97 +1,158 @@
-#define CL_SILENCE_DEPRECATION
-
-#include <stdio.h>
-#include <iostream>
-#include <fstream>
-#include <vector>
-#include <OpenCL/opencl.h>
-
-#define DATA_SIZE (1024)
+#define GL_SILENCE_DEPRECATION
 
 
-std::vector<char> load_kernel(const std::string& name)
-{
-    std::ifstream file(name, std::ios::binary | std::ios::ate);
-    std::streamsize size = file.tellg();
-    if (size < 0)
+#include <GLUT/glut.h>
+#include "engine.h"
+
+
+const int FRAME_INTERVAL_MS = 10; // 100
+
+
+class Renderer {
+
+public:
+    static Engine* m_engine;
+
+public:
+    Renderer(Engine* engine)
     {
-        std::cout << "Kernel source file not found" << std::endl;
-        return std::vector<char>();
+        m_engine = engine;
     }
-    file.seekg(0, std::ios::beg);
 
-    std::vector<char> buffer(size);
-    if (file.read(buffer.data(), size))
-    {
-        return buffer;
-    }
-    else
-    {
-        return std::vector<char>();
-    }
-}
+    static int run_glut() {
+        int argc = 0;
+        char *argv[1] = {(char *) ""};
+        glutInit(&argc, argv);
 
-int main(void) {
-    int err = 0;
-    cl_device_id device_id = 0;
+        /* set the window size to 512 x 512 */
+        glutInitWindowSize(512, 512);
 
-    clGetDeviceIDs(NULL, CL_DEVICE_TYPE_GPU, 1, &device_id, NULL);
-    // clGetDeviceIDs(NULL, CL_DEVICE_TYPE_CPU, 1, &device_id, NULL);
-    cl_context context = clCreateContext(0, 1, &device_id, NULL, NULL, &err);
-    cl_command_queue commands = clCreateCommandQueue(context, device_id, 0, &err);
-    std::vector<char> kernel_text = load_kernel("experimental.cl");
-    if (kernel_text.size() == 0)
-    {
-        return 1;
+        /* set the display mode to Red, Green, Blue and Alpha
+         allocate a depth buffer
+         enable double buffering
+         */
+        glutInitDisplayMode(GLUT_RGBA | GLUT_DEPTH | GLUT_DOUBLE);
+
+        /* create the window (and call it Lab 1) */
+        glutCreateWindow("Lab 1");
+
+        /* set the glut display callback function
+         this is the function GLUT will call every time
+         the window needs to be drawn
+         */
+        glutDisplayFunc(display);
+
+        /* set the glut reshape callback function
+         this is the function GLUT will call whenever
+         the window is resized, including when it is
+         first created
+         */
+        glutReshapeFunc(reshape);
+
+        glutTimerFunc(FRAME_INTERVAL_MS, Loop, 0);
+
+        /* set the default background color to black */
+        glClearColor(0, 0, 0, 1);
+
+        /* enter the main event loop so that GLUT can process
+         all of the window event messages
+         */
+        glutMainLoop();
+
+        return 0;
     }
-    const char* kernel_text_data = kernel_text.data();
-    cl_program program = clCreateProgramWithSource(context, 1, &kernel_text_data, NULL, &err);
-    err = clBuildProgram(program, 0, NULL, NULL, NULL, NULL);
-    printf("clBuildProgram ret = %d, (CL_BUILD_PROGRAM_FAILURE=%d)\n", err, CL_BUILD_PROGRAM_FAILURE);
-    if (true || err != CL_SUCCESS)
-    {
-        char* build_log = nullptr;
-        size_t ret_val_size = 0;
-        clGetProgramBuildInfo(program, device_id, CL_PROGRAM_BUILD_LOG, 0, NULL, &ret_val_size);
-        build_log = new char[ret_val_size+1];
-        clGetProgramBuildInfo(program, device_id, CL_PROGRAM_BUILD_LOG, ret_val_size, build_log, NULL);
-        build_log[ret_val_size] = '\0';
-        std::cout << build_log << std::endl;
-        delete[] build_log;
+
+    /*! glut display callback function.  Every time the window needs to be drawn,
+     glut will call this function.  This includes when the window size
+     changes, or when another window covering part of this window is
+     moved so this window is uncovered.
+     */
+    static void display() {
+        static int cnt = 128;
+        /* clear the color buffer (resets everything to black) */
+        glClear(GL_COLOR_BUFFER_BIT);
+
+        /* set the current drawing color to red */
+        glColor3f((cnt % 255) / 255.0f, 0, 0);
+
+        /* start drawing triangles, each triangle takes 3 vertices */
+        glBegin(GL_TRIANGLES);
+
+        /* give the 3 triangle vertex coordinates 1 at a time */
+        glVertex2f(10, 10);
+        glVertex2f(250, 400);
+        glVertex2f(400, 10);
+
+        /* tell OpenGL we're done drawing triangles */
+        glEnd();
+
+        if (m_engine)
+        {
+            // fetch rendered image
+            std::vector<Point2f> points = m_engine->getState();
+            int debug = 0;
+            // and draw it with opengl
+        }
+
+        /* swap the back and front buffers so we can see what we just drew */
+        glutSwapBuffers();
+
+        //    if (cnt == 200)
+        //    {
+        //        exit(0);
+        //    }
+
+        cnt++;
     }
-    cl_kernel kernel = clCreateKernel(program, "experimental", &err);
-    cl_mem input = clCreateBuffer(context,  CL_MEM_READ_ONLY,  sizeof(float) * DATA_SIZE, NULL, NULL);
-    cl_mem output = clCreateBuffer(context, CL_MEM_WRITE_ONLY, sizeof(float) * DATA_SIZE, NULL, NULL);
-    float data[DATA_SIZE];
-    for (int i = 0; i < DATA_SIZE; i++) { data[i] = i; }
-    err = clEnqueueWriteBuffer(commands, input, CL_TRUE, 0, sizeof(float) * DATA_SIZE, data, 0, NULL, NULL);
-    clSetKernelArg(kernel, 0, sizeof(cl_mem), &input);
-    clSetKernelArg(kernel, 1, sizeof(cl_mem), &output);
-    unsigned int count = DATA_SIZE;
-    clSetKernelArg(kernel, 2, sizeof(unsigned int), &count);
-    size_t local = 0;
-    clGetKernelWorkGroupInfo(kernel, device_id, CL_KERNEL_WORK_GROUP_SIZE, sizeof(local), &local, NULL);
-    size_t global = count;
-    clEnqueueNDRangeKernel(commands, kernel, 1, NULL, &global, &local, 0, NULL, NULL);
-    clFinish(commands);
-    float results[DATA_SIZE];
-    clEnqueueReadBuffer(commands, output, CL_TRUE, 0, sizeof(float) * count, results, 0, NULL, NULL);
-    unsigned int correct = 0;
-    double total = 0.0;
-    for (int i = 0; i < count; i++) {
-        total += data[i];
+
+    /*! glut reshape callback function.  GLUT calls this function whenever
+     the window is resized, including the first time it is created.
+     You can use variables to keep track the current window size.
+     */
+    static void reshape(int width, int height) {
+        /* tell OpenGL we want to display in a recangle that is the
+         same size as the window
+         */
+        glViewport(0, 0, width, height);
+
+        /* switch to the projection matrix */
+        glMatrixMode(GL_PROJECTION);
+
+        /* clear the projection matrix */
+        glLoadIdentity();
+
+        /* set the camera view, orthographic projection in 2D */
+        gluOrtho2D(0, width, 0, height);
+
+        /* switch back to the model view matrix */
+        glMatrixMode(GL_MODELVIEW);
     }
-    for (int i = 0; i < count; i++) {
-        float reference = (float)(total - data[i]);
-        //printf("%f %f\n", results[i], reference);
-        if (results[i] == reference) { correct++; }
+
+    static void Loop(int v) {
+        // Update the positions of the objects
+        // ......
+        // ......
+
+        if (m_engine)
+        {
+            m_engine->process();
+        }
+
+        glutPostRedisplay();
+        glutTimerFunc(FRAME_INTERVAL_MS, Loop, 0);
     }
-    printf("Computed '%d/%d' correct values!\n", correct, count);
-    clReleaseMemObject(input);
-    clReleaseMemObject(output);
-    clReleaseProgram(program);
-    clReleaseKernel(kernel);
-    clReleaseCommandQueue(commands);
-    clReleaseContext(context);
+
+};
+
+
+Engine g_engine;
+Engine* Renderer::m_engine = nullptr;
+Renderer g_renderer(&g_engine);
+
+
+int main(int argc, char** argv) {
+
+    g_renderer.run_glut();
+
     return 0;
 }

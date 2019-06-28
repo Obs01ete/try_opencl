@@ -13,6 +13,11 @@ std::vector<char> load_kernel(const std::string& name)
 {
     std::ifstream file(name, std::ios::binary | std::ios::ate);
     std::streamsize size = file.tellg();
+    if (size < 0)
+    {
+        std::cout << "Kernel source file not found" << std::endl;
+        return std::vector<char>();
+    }
     file.seekg(0, std::ios::beg);
 
     std::vector<char> buffer(size);
@@ -35,6 +40,10 @@ int main(void) {
     cl_context context = clCreateContext(0, 1, &device_id, NULL, NULL, &err);
     cl_command_queue commands = clCreateCommandQueue(context, device_id, 0, &err);
     std::vector<char> kernel_text = load_kernel("experimental.cl");
+    if (kernel_text.size() == 0)
+    {
+        return 1;
+    }
     const char* kernel_text_data = kernel_text.data();
     cl_program program = clCreateProgramWithSource(context, 1, &kernel_text_data, NULL, &err);
     err = clBuildProgram(program, 0, NULL, NULL, NULL, NULL);

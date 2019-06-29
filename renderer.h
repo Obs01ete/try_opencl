@@ -12,6 +12,7 @@ class Renderer {
 
 public:
     static Engine* m_engine;
+    static int m_cnt;
 
 public:
     Renderer(Engine* engine);

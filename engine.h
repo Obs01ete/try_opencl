@@ -33,7 +33,7 @@ private:
 
     std::vector<Point2f> m_result;
 
-    cl_float2 m_repelent;
+    std::unique_ptr<cl_float2> m_repelent;
 
 public:
     Engine();
@@ -41,7 +41,7 @@ public:
     std::vector<Point2f> getState();
     ~Engine();
 
-    void setRepelentCoords(float x, float y);
+    void setRepelentCoords(bool exists, float x = 0.0f, float y = 0.0f);
 };
 
 #endif

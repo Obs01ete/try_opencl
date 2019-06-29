@@ -3,7 +3,6 @@
 
 
 Engine g_engine;
-Engine* Renderer::m_engine = nullptr;
 Renderer g_renderer(&g_engine);
 
 

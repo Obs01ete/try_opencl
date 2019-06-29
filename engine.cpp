@@ -91,6 +91,13 @@ Engine::Engine()
             (float)col/numCols,
             (float)row/numRows
         };
+        if (true)
+        {
+            point = cl_float2 {
+                point.x * 1.5f - 0.25f,
+                point.y * 1.5f - 0.25f
+            };
+        }
         initState.push_back(point);
     }
     m_positionsSize = numPoints;
@@ -101,7 +108,7 @@ Engine::Engine()
     err = clEnqueueWriteBuffer(m_commands, m_anchors, CL_TRUE, 0, sizeBytes(initState), initState.data(), 0, NULL, NULL);
     clFinish(m_commands);
 
-    m_repelent = cl_float2 {0.3f, 0.7f};
+    m_repelent = nullptr;
 
     m_initialized = true;
 }
@@ -119,7 +126,10 @@ void Engine::process()
     clSetKernelArg(m_kernelSimStep, 1, sizeof(cl_mem), &m_anchors);
     size_t count = m_positionsSize;
     clSetKernelArg(m_kernelSimStep, 2, sizeof(count), &count);
-    clSetKernelArg(m_kernelSimStep, 3, sizeof(cl_float2), &m_repelent);
+    cl_int repelentExists = (cl_int)((bool)m_repelent);
+    clSetKernelArg(m_kernelSimStep, 3, sizeof(cl_int), &repelentExists);
+    cl_float2 repelent = ((bool)m_repelent) ? *m_repelent : cl_float2{0, 0};
+    clSetKernelArg(m_kernelSimStep, 4, sizeof(cl_float2), &repelent);
     size_t local = 0;
     clGetKernelWorkGroupInfo(m_kernelSimStep, m_deviceId, CL_KERNEL_WORK_GROUP_SIZE, sizeof(local), &local, NULL);
     size_t global = count;
@@ -153,8 +163,15 @@ Engine::~Engine()
     }
 }
 
-void Engine::setRepelentCoords(float x, float y)
+void Engine::setRepelentCoords(bool exists, float x, float y)
 {
-    m_repelent = cl_float2{x, y};
+    if (exists)
+    {
+        m_repelent = std::make_unique<cl_float2>(cl_float2{x, y});
+    }
+    else
+    {
+        m_repelent = nullptr;
+    }
 }
 

@@ -26,16 +26,22 @@ private:
     cl_command_queue m_commands;
     cl_program m_program;
     cl_kernel m_kernelSimStep;
-    cl_mem m_state;
-    size_t m_stateSize;
+
+    size_t m_positionsSize;
+    cl_mem m_positions; // size m_positionsSize elems
+    cl_mem m_anchors; // size m_positionsSize elems
 
     std::vector<Point2f> m_result;
+
+    cl_float2 m_repelent;
 
 public:
     Engine();
     void process();
     std::vector<Point2f> getState();
     ~Engine();
+
+    void setRepelentCoords(float x, float y);
 };
 
 #endif

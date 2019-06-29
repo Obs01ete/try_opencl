@@ -1,39 +1,34 @@
 __kernel void sim_step(
-    __global float2* state,
-    const unsigned int stateSize
+    __global float2* positions,
+    __global float2* anchors,
+    const unsigned int positionsSize,
+    float2 repelent
     )
 {
-    float alpha = 1e-4f;
-    const float2 repelent = (float2)(0.3f, 0.4f);
-    size_t threadIdx = get_global_id(0);
-    if (threadIdx < stateSize)
-    {
-        float2 position = state[threadIdx];
-        float2 radiusVector = position - repelent;
-        float len = length(radiusVector);
-        float2 force = alpha * radiusVector / (len*len*len + 1e-6f);
-        float saturationRate = 0.1f;
-        float2 displacement = force * saturationRate;
-        float2 newPosition = position + displacement;
-        state[threadIdx] = newPosition;
-        // state[threadIdx] = state[threadIdx] + 0.01f;
-    }
-}
+    float alpha = 1e-1f;
+    float beta = 1e-3f;
+    float saturationRate = 0.2f;
+    float smoothnessFactor = 5e-4f;
 
-__kernel void experimental(
-    __global float* m_state,
-    __global float* m_output,
-    const unsigned int count)
-{
     size_t threadIdx = get_global_id(0);
-    if (threadIdx < count) {
-        float acc = 0.0f;
-        size_t j = 0;
-        for (j = 0; j < count; j++) {
-            if (j != threadIdx) {
-                acc += m_state[j];
-            }
-        }
-        m_output[threadIdx] = acc;
+
+    if (threadIdx < positionsSize)
+    {
+        float2 position = positions[threadIdx];
+        float2 anchor = anchors[threadIdx];
+
+        float2 repelVector = position - repelent;
+        float repelLen = length(repelVector);
+        float2 repelForce = beta * repelVector /
+            (repelLen*repelLen*repelLen + smoothnessFactor);
+
+        float2 attractVector = position - anchor;
+        float2 attractForce = - alpha * attractVector;
+
+        float2 totalForce = repelForce + attractForce;
+
+        float2 displacement = totalForce * saturationRate;
+        float2 newPosition = position + displacement;
+        positions[threadIdx] = newPosition;
     }
 }

@@ -35,6 +35,13 @@ private:
 
     static void Loop(int v);
 
+    static void drawPoints(const std::vector<Point2f>& points);
+
+    static void drawCircles(const std::vector<Point2f>& points);
+
+    static void mouse(int x, int y);
+
+    static void entry(int state);
 };
 
 #endif //TRY_OPENCL_RENDERER_H

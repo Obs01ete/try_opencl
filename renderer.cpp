@@ -5,6 +5,7 @@
 
 #include "renderer.h"
 
+#include <cmath>
 #define GL_SILENCE_DEPRECATION
 #include <GLUT/glut.h>
 
@@ -49,6 +50,9 @@ int Renderer::run_glut() {
 
     glutTimerFunc(FRAME_INTERVAL_MS, Loop, 0);
 
+    glutPassiveMotionFunc(mouse);
+    glutEntryFunc(entry);
+
     /* set the default background color to black */
     glClearColor(0, 0, 0, 1);
 
@@ -59,6 +63,45 @@ int Renderer::run_glut() {
 
     return 0;
 }
+
+
+void Renderer::drawPoints(const std::vector<Point2f>& points)
+{
+    int frameWidth = glutGet(GLUT_WINDOW_WIDTH);
+    int frameHeight = glutGet(GLUT_WINDOW_HEIGHT);
+
+    glBegin(GL_POINTS);
+    for (const auto& p : points)
+    {
+        glVertex2f(p.x*frameWidth, p.y*frameHeight);
+    }
+    glEnd();
+}
+
+
+void Renderer::drawCircles(const std::vector<Point2f>& points)
+{
+    int num_vertices = 8;
+    float r = 2.0f;
+
+    int frameWidth = glutGet(GLUT_WINDOW_WIDTH);
+    int frameHeight = glutGet(GLUT_WINDOW_HEIGHT);
+
+    for (const auto& p : points)
+    {
+        glBegin(GL_POLYGON);
+        for (int i = 0; i < num_vertices; i++)
+        {
+            auto cx = p.x*frameWidth;
+            auto cy = p.y*frameHeight;
+            glVertex2f(
+                    cx + r*cosf(2*(float)M_PI*i/num_vertices),
+                    cy + r*sinf(2*(float)M_PI*i/num_vertices));
+        }
+        glEnd();
+    }
+}
+
 
 /*! glut display callback function.  Every time the window needs to be drawn,
  glut will call this function.  This includes when the window size
@@ -78,14 +121,11 @@ void Renderer::display() {
 
     /* give the 3 triangle vertex coordinates 1 at a time */
     glVertex2f(10, 10);
-    glVertex2f(250, 400);
-    glVertex2f(400, 10);
+    glVertex2f(30, 10);
+    glVertex2f(20, 25);
 
     /* tell OpenGL we're done drawing triangles */
     glEnd();
-
-    int frameWidth = glutGet(GLUT_WINDOW_WIDTH);
-    int frameHeight = glutGet(GLUT_WINDOW_HEIGHT);
 
     if (m_engine)
     {
@@ -94,21 +134,12 @@ void Renderer::display() {
         int debug = 0;
         // and draw it with opengl
         glColor3f(1, 1, 1);
-        glBegin(GL_POINTS);
-        for (const auto& p : points)
-        {
-            glVertex2f(p.x*frameWidth, p.y*frameHeight);
-        }
-        glEnd();
+        //drawPoints(points);
+        drawCircles(points);
     }
 
     /* swap the back and front buffers so we can see what we just drew */
     glutSwapBuffers();
-
-    //    if (cnt == 200)
-    //    {
-    //        exit(0);
-    //    }
 
     cnt++;
 }
@@ -148,4 +179,22 @@ void Renderer::Loop(int v) {
 
     glutPostRedisplay();
     glutTimerFunc(FRAME_INTERVAL_MS, Loop, 0);
+}
+
+void Renderer::mouse(int x, int y)
+{
+    int frameWidth = glutGet(GLUT_WINDOW_WIDTH);
+    int frameHeight = glutGet(GLUT_WINDOW_HEIGHT);
+
+    m_engine->setRepelentCoords(
+            (float)x/frameWidth,
+            (float)(frameHeight-y)/frameHeight);
+}
+
+void Renderer::entry(int state)
+{
+    if (state == GLUT_LEFT)
+    {
+
+    }
 }

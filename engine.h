@@ -1,5 +1,5 @@
 //
-// Created by Dmitry on 2019-06-28.
+// Created by Dmitrii Khizbullin on 2019-06-28.
 //
 
 #ifndef ENGINE_H
@@ -21,13 +21,13 @@ class Engine
 private:
     bool m_initialized;
 
-    cl_device_id device_id;
-    cl_context context;
-    cl_command_queue commands;
-    cl_program program;
-    cl_kernel kernel;
-    cl_mem input;
-    cl_mem output;
+    cl_device_id m_deviceId;
+    cl_context m_context;
+    cl_command_queue m_commands;
+    cl_program m_program;
+    cl_kernel m_kernelSimStep;
+    cl_mem m_state;
+    size_t m_stateSize;
 
     std::vector<Point2f> m_result;
 

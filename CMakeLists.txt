@@ -13,7 +13,7 @@ find_package(OpenGL REQUIRED)
 find_package(GLUT REQUIRED)
 include_directories( ${OPENGL_INCLUDE_DIRS}  ${GLUT_INCLUDE_DIRS} )
 
-set (opencl_example_src main.cpp engine.cpp engine.h)
+set (opencl_example_src main.cpp engine.cpp engine.h renderer.cpp renderer.h)
 
 add_executable(try_opencl ${opencl_example_src})
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/experimental.cl ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)

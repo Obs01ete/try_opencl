@@ -1,5 +1,7 @@
 //
 // Created by Dmitrii Khizbullin on 2019-06-28.
+// Inspired by the home page of Neurodata Lab
+// https://neurodatalab.com/#home
 //
 
 #include "engine.h"

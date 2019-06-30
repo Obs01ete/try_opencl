@@ -27,6 +27,9 @@ __kernel void sim_step(
                 (repelLen*repelLen + smoothnessFactor);
         }
 
+        // Instead of pushing away from the repelant,
+        // let's make particles rotate clockwise around
+        // the repelant.
         float angle = -1.4f; // radian
         repelForce = (float2)(
             repelForce.x*cos(angle) - repelForce.y*sin(angle),

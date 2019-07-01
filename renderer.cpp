@@ -9,12 +9,15 @@
 #define GL_SILENCE_DEPRECATION
 #include <GLUT/glut.h>
 
+#include "timer.h"
+
 
 const int FRAME_INTERVAL_MS = 10; // 100
 
 
 Engine* Renderer::m_engine = nullptr;
 int Renderer::m_cnt = 128;
+ReentryTimer Renderer::m_fpsTimer;
 
 
 Renderer::Renderer(Engine* engine)
@@ -72,8 +75,10 @@ void Renderer::drawCircles(const std::vector<Point2f>& points)
     int frameWidth = glutGet(GLUT_WINDOW_WIDTH);
     int frameHeight = glutGet(GLUT_WINDOW_HEIGHT);
 
-    for (const auto& p : points)
+    for (int ip = 0; ip < points.size(); ip++)
     {
+        const auto& p = points[ip];
+        if (ip % 133 != 0) { continue; }
         glBegin(GL_POLYGON);
         for (int i = 0; i < num_vertices; i++)
         {
@@ -109,7 +114,7 @@ void Renderer::display() {
     if (m_engine)
     {
         // fetch rendered image
-        std::vector<Point2f> points = m_engine->getState();
+        const std::vector<Point2f>& points = m_engine->getState();
         // and draw it with opengl
         glColor3f(1, 1, 1);
         drawCircles(points);
@@ -118,6 +123,8 @@ void Renderer::display() {
     glutSwapBuffers();
 
     m_cnt = (m_cnt+1) % 256;
+
+    m_fpsTimer.print("Frame interval");
 }
 
 /*! glut reshape callback function.  GLUT calls this function whenever

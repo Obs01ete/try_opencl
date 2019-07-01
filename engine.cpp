@@ -9,6 +9,8 @@
 #include <stdio.h>
 #include <iostream>
 #include <fstream>
+#include "timer.h"
+
 
 
 template<typename T>
@@ -79,7 +81,7 @@ Engine::Engine()
     }
     m_kernelSimStep = clCreateKernel(m_program, "sim_step", &err);
 
-    int n = 4;
+    int n = 16;
     const int numRows = 32*n;
     const int numCols = 32*n;
     const int numPoints = numRows * numCols;
@@ -122,8 +124,11 @@ void Engine::process()
         return;
     }
 
-    std::cout << "Engine processing frame" << std::endl;
+    //std::cout << "Engine processing frame (num_particles=" << m_positionsSize << ")" << std::endl;
 
+    Timer timerTotal;
+
+    Timer timerKernel;
     clSetKernelArg(m_kernelSimStep, 0, sizeof(cl_mem), &m_positions);
     clSetKernelArg(m_kernelSimStep, 1, sizeof(cl_mem), &m_anchors);
     size_t count = m_positionsSize;
@@ -136,20 +141,22 @@ void Engine::process()
     clGetKernelWorkGroupInfo(m_kernelSimStep, m_deviceId, CL_KERNEL_WORK_GROUP_SIZE, sizeof(local), &local, NULL);
     size_t global = count;
     clEnqueueNDRangeKernel(m_commands, m_kernelSimStep, 1, NULL, &global, &local, 0, NULL, NULL);
-    clFinish(m_commands);
+    //clFinish(m_commands);
+    //timerKernel.print("Kernel time");
+    Timer timerReadout;
     m_result.clear();
     m_result.resize(m_positionsSize);
     clEnqueueReadBuffer(m_commands, m_positions, CL_TRUE, 0, sizeBytes(m_result), m_result.data(), 0, NULL, NULL);
-    clFinish(m_commands);
-    std::cout << m_result[33].x << " " << m_result[33].y << std::endl;
+    //clFinish(m_commands);
+    //timerReadout.print("Readout");
+
+    timerTotal.print("Engine processing time");
+
+    // std::cout << "Sample point: " << m_result[33].x << " " << m_result[33].y << std::endl;
 }
 
-std::vector<Point2f> Engine::getState()
+const std::vector<Point2f>& Engine::getState()
 {
-    if (!m_initialized)
-    {
-        return std::vector<Point2f>();
-    }
     return m_result;
 }
 

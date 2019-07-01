@@ -6,6 +6,7 @@
 #define TRY_OPENCL_RENDERER_H
 
 #include "engine.h"
+#include "timer.h"
 
 
 class Renderer {
@@ -13,6 +14,7 @@ class Renderer {
 public:
     static Engine* m_engine;
     static int m_cnt;
+    static ReentryTimer m_fpsTimer;
 
 public:
     Renderer(Engine* engine);

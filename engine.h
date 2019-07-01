@@ -38,7 +38,7 @@ private:
 public:
     Engine();
     void process();
-    std::vector<Point2f> getState();
+    const std::vector<Point2f>& getState();
     ~Engine();
 
     void setRepelentCoords(bool exists, float x = 0.0f, float y = 0.0f);

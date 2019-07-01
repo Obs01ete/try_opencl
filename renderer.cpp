@@ -6,6 +6,7 @@
 #include "renderer.h"
 
 #include <cmath>
+#import <array>
 #define GL_SILENCE_DEPRECATION
 #include <GLUT/glut.h>
 
@@ -71,22 +72,33 @@ void Renderer::drawCircles(const std::vector<Point2f>& points)
 {
     int num_vertices = 8;
     float r = 2.0f;
+    int drawEveryNthPoint = 6;
 
     int frameWidth = glutGet(GLUT_WINDOW_WIDTH);
     int frameHeight = glutGet(GLUT_WINDOW_HEIGHT);
 
+    std::vector<std::array<float, 2> > circle;
+    circle.reserve(num_vertices);
+    for (int i = 0; i < num_vertices; i++)
+    {
+        circle.push_back({
+            r*cosf(2*(float)M_PI*i/num_vertices),
+            r*sinf(2*(float)M_PI*i/num_vertices)
+        });
+    }
+
     for (int ip = 0; ip < points.size(); ip++)
     {
         const auto& p = points[ip];
-        if (ip % 133 != 0) { continue; }
+        if (ip % drawEveryNthPoint != 0) { continue; }
         glBegin(GL_POLYGON);
         for (int i = 0; i < num_vertices; i++)
         {
             auto cx = p.x*frameWidth;
             auto cy = p.y*frameHeight;
             glVertex2f(
-                    cx + r*cosf(2*(float)M_PI*i/num_vertices),
-                    cy + r*sinf(2*(float)M_PI*i/num_vertices));
+                    cx + circle[i][0],
+                    cy + circle[i][1]);
         }
         glEnd();
     }

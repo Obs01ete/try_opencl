@@ -5,10 +5,13 @@
 #ifndef ENGINE_H
 #define ENGINE_H
 
+#import <vector>
+
 #define CL_SILENCE_DEPRECATION
 #include <OpenCL/opencl.h>
 
-#import <vector>
+#include "png_wrapper.h"
+
 
 struct Point2f
 {

@@ -84,6 +84,12 @@ Engine::Engine()
     int n = 16;
     const int numRows = 32*n;
     const int numCols = 32*n;
+
+    Png png;
+    png.read_png_file("bobmarley512g.png");
+    std::vector<unsigned char> image = png.process_file(numCols, numRows);
+
+
     const int numPoints = numRows * numCols;
     std::vector<cl_float2> initState;
     initState.reserve(numPoints);
@@ -95,11 +101,17 @@ Engine::Engine()
             (float)col/numCols,
             (float)row/numRows
         };
+        bool mask = image[i] != 0;
+        if (!mask)
+        {
+            point = cl_float2 {0, 0};
+        }
         if (true)
         {
+            float gap = 0.05f;
             point = cl_float2 {
-                point.x * 1.5f - 0.25f,
-                point.y * 1.5f - 0.25f
+                point.x * (1.0f + 2*gap) - gap,
+                point.y * (1.0f + 2*gap) - gap
             };
         }
         initState.push_back(point);

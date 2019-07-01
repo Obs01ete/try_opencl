@@ -24,3 +24,8 @@ make
 Video at GDrive:
 
 https://drive.google.com/file/d/1UM5dTZOSpHyH94rkxexdZNVaq-P3cG1w/view?usp=sharing
+
+Encoded with:
+```$xslt
+ffmpeg -i marley_world.mov -c:v libx264 -crf 30 -preset fast -c:a copy output.mp4
+```

@@ -6,6 +6,9 @@ Conceptually the project is a simulation of particles, pinned to their anchor po
 
 Technically the simulation is run in OpenCL, thus is very fast. Visualization is done in OpenGL+GLUT.
 
+
+![alt text](assets/marley_small.gif "Inspired")
+
 ### Install, build and run
 
 Currently the project supports MacOS only.
@@ -30,6 +33,3 @@ Encoded with:
 ffmpeg -i marley_world.mov -c:v libx264 -crf 30 -preset fast -c:a copy output.mp4
 ```
 
-Bob Marley-fied version:
-
-![alt text](assets/marley_small.gif "Inspired")

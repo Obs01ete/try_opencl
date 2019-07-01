@@ -29,3 +29,7 @@ Encoded with:
 ```$xslt
 ffmpeg -i marley_world.mov -c:v libx264 -crf 30 -preset fast -c:a copy output.mp4
 ```
+
+Bob Marley-fied version:
+
+![alt text](assets/marley_small.gif "Inspired")

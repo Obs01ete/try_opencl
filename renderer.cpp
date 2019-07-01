@@ -70,7 +70,7 @@ void Renderer::drawPoints(const std::vector<Point2f>& points)
 
 void Renderer::drawCircles(const std::vector<Point2f>& points)
 {
-    int num_vertices = 8;
+    int num_vertices = 4;
     float r = 2.0f;
     int drawEveryNthPoint = 6;
 
@@ -129,7 +129,8 @@ void Renderer::display() {
         const std::vector<Point2f>& points = m_engine->getState();
         // and draw it with opengl
         glColor3f(1, 1, 1);
-        drawCircles(points);
+        //drawCircles(points);
+        drawPoints(points);
     }
 
     glutSwapBuffers();

@@ -7,7 +7,7 @@ Conceptually the project is a simulation of particles, pinned to their anchor po
 Technically the simulation is run in OpenCL, thus is very fast. Visualization is done in OpenGL+GLUT.
 
 
-![alt text](assets/marley_small.gif "Inspired")
+![alt text](assets/marley_medium.gif "Inspired by Bob Marley")
 
 ### Install, build and run
 

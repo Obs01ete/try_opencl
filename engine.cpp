@@ -53,7 +53,8 @@ Engine::Engine()
     clGetDeviceIDs(NULL, CL_DEVICE_TYPE_GPU, 1, &m_deviceId, NULL);
     // clGetDeviceIDs(NULL, CL_DEVICE_TYPE_CPU, 1, &m_deviceId, NULL);
     m_context = clCreateContext(0, 1, &m_deviceId, NULL, NULL, &err);
-    m_commands = clCreateCommandQueue(m_context, m_deviceId, 0, &err);
+    cl_command_queue_properties props = CL_QUEUE_PROFILING_ENABLE;
+    m_commands = clCreateCommandQueue(m_context, m_deviceId, props, &err);
     std::vector<char> kernelTextArray = load_kernel("experimental.cl");
     if (kernelTextArray.size() == 0)
     {
@@ -88,7 +89,6 @@ Engine::Engine()
     Png png;
     png.read_png_file("bobmarley512g.png");
     std::vector<unsigned char> image = png.process_file(numCols, numRows);
-
 
     const int numPoints = numRows * numCols;
     std::vector<cl_float2> initState;
@@ -129,6 +129,17 @@ Engine::Engine()
     m_initialized = true;
 }
 
+void printEventDuration(const cl_event& event)
+{
+    cl_ulong start, end;
+    clGetEventProfilingInfo(event, CL_PROFILING_COMMAND_END,
+                            sizeof(cl_ulong), &end, NULL);
+    clGetEventProfilingInfo(event, CL_PROFILING_COMMAND_START,
+                            sizeof(cl_ulong), &start, NULL);
+    float executionTimeInMilliseconds = (end - start) * 1.0e-6f;
+    std::cout << executionTimeInMilliseconds << std::endl;
+}
+
 void Engine::process()
 {
     if (!m_initialized)
@@ -137,6 +148,12 @@ void Engine::process()
     }
 
     //std::cout << "Engine processing frame (num_particles=" << m_positionsSize << ")" << std::endl;
+
+    if (m_result.size() != m_positionsSize)
+    {
+        m_result = std::vector<Point2f>(m_positionsSize, Point2f{});
+    }
+
 
     Timer timerTotal;
 
@@ -152,17 +169,20 @@ void Engine::process()
     size_t local = 0;
     clGetKernelWorkGroupInfo(m_kernelSimStep, m_deviceId, CL_KERNEL_WORK_GROUP_SIZE, sizeof(local), &local, NULL);
     size_t global = count;
-    clEnqueueNDRangeKernel(m_commands, m_kernelSimStep, 1, NULL, &global, &local, 0, NULL, NULL);
+    cl_event eventSimStep{};
+    clEnqueueNDRangeKernel(m_commands, m_kernelSimStep, 1, NULL, &global, &local, 0, NULL, &eventSimStep);
     //clFinish(m_commands);
     //timerKernel.print("Kernel time");
     Timer timerReadout;
-    m_result.clear();
-    m_result.resize(m_positionsSize);
-    clEnqueueReadBuffer(m_commands, m_positions, CL_TRUE, 0, sizeBytes(m_result), m_result.data(), 0, NULL, NULL);
+    cl_event eventReadPositions{};
+    clEnqueueReadBuffer(m_commands, m_positions, CL_TRUE, 0, sizeBytes(m_result), m_result.data(), 0, NULL, &eventReadPositions);
     //clFinish(m_commands);
     //timerReadout.print("Readout");
 
     timerTotal.print("Engine processing time");
+
+    printEventDuration(eventSimStep);
+    printEventDuration(eventReadPositions);
 
     // std::cout << "Sample point: " << m_result[33].x << " " << m_result[33].y << std::endl;
 }

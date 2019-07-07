@@ -27,7 +27,7 @@ void abort_(const char * s, ...)
 }
 
 
-void Png::read_png_file(char *file_name) {
+void Png::read_png_file(const char *file_name) {
     char header[8];    // 8 is the maximum size that can be checked
 
     /* open file and test for it being a png */

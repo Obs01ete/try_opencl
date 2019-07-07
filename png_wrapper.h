@@ -21,7 +21,7 @@ private:
 
 public:
 
-    void read_png_file(char *file_name);
+    void read_png_file(const char *file_name);
 
     void write_png_file(char *file_name);
 

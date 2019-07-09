@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <iostream>
 #include <fstream>
+#include <math.h>
 #include "timer.h"
 
 
@@ -168,7 +169,7 @@ void Engine::process()
     clSetKernelArg(m_kernelSimStep, 4, sizeof(cl_float2), &repelent);
     size_t local = 0;
     clGetKernelWorkGroupInfo(m_kernelSimStep, m_deviceId, CL_KERNEL_WORK_GROUP_SIZE, sizeof(local), &local, NULL);
-    size_t global = count;
+    size_t global = local*(size_t)ceilf((float)count/local);
     cl_event eventSimStep{};
     clEnqueueNDRangeKernel(m_commands, m_kernelSimStep, 1, NULL, &global, &local, 0, NULL, &eventSimStep);
     //clFinish(m_commands);
